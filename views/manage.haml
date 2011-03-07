@@ -1,0 +1,115 @@
+.panel
+  .title
+    =se("Manage Superlist")
+    +$s->key
+  .body
+    =superform($s)
+-if(!$s->is_new)
+  .panel
+    .title
+      =se("Selection Params")
+    .body
+      :php
+        $new_object = SuperlistActiverecordParam::new_model_instance( array(
+          'attributes'=>array(
+            'superlist_id'=>$s->id,
+          )
+        ));
+        
+        $param_names = "conditions, order, where, limit, joins";
+        $meta = array(
+          'klass'=>'SuperlistActiverecordParam',
+          'objects'=>$s->superlist_activerecord_params,
+          'new_object'=>$new_object,
+          'list'=>array('name', 'value', 'comment'),
+          'sections'=>array(
+            'basic'=>array(
+              'name'=>array('type'=>'select', 'item_array'=>$param_names),
+              'value',
+              'comment',
+            ),
+          ),
+        );
+        
+        superlist($meta);
+  .panel
+    .title
+      =se("List Columns")
+    .body
+      :php
+        $new_object = SuperlistListColumn::new_model_instance( array(
+          'attributes'=>array(
+            'superlist_id'=>$s->id,
+          )
+        ));
+        global $model_settings;
+        $columns = array();
+        foreach($model_settings[$s->class]['type'] as $column_name=>$type_info)
+        {
+          if($column_name == 'id') continue;
+          if(endswith($column_name, '_id'))
+          {
+            $columns[] = substr($column_name, 0, -3);
+          } else {
+            $columns[] = $column_name;
+          }
+        }
+        $meta = array(
+          'klass'=>'SuperlistListColumn',
+          'objects'=>$s->superlist_list_columns(array('order'=>'weight')),
+          'list'=>array('name'),
+          'sections'=>array(
+            'basic'=>array(
+              'name'=>array('type'=>'select', 'item_array'=>$columns),
+            ),
+          ),
+          'new_object'=>$new_object,
+        );
+      -superlist($meta);
+  .panel
+    .title
+      =se("Sections")
+    .body
+      :php
+        $new_object = SuperlistSection::new_model_instance( array(
+          'attributes'=>array(
+            'superlist_id'=>$s->id,
+          ),
+        ));
+        
+        $meta = array(
+          'klass'=>'SuperlistSection',
+          'objects'=>$s->superlist_sections( array('order'=>'weight')),
+          'list'=>array('name', 'calced_fields'=>array('type'=>'mutex')),
+          'new_object'=>$new_object,
+        );
+        superlist($meta);
+  .panel
+    .title
+      =se("Extra Buttons")
+    .body
+      :php
+        $new_object = SuperlistButton::new_model_instance( array(
+          'attributes'=>array(
+            'superlist_id'=>$s->id,
+          )
+        ));
+        
+        global $__routes;
+        $urls = array_keys($__routes);
+        sort($urls);
+        $meta = array(
+          'klass'=>'SuperlistButton',
+          'objects'=>$s->superlist_buttons( array('order'=>'weight')),
+          'list'=>array('name', 'calced_url'),
+          'new_object'=>$new_object,
+          'sections'=>array(
+            'basic'=>array(
+              'name',
+              'url_function'=>array('type'=>'select', 'item_array'=>$urls),
+              'url_code',
+            ),
+          ),
+        );
+        
+        superlist($meta);

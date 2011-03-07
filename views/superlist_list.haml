@@ -1,0 +1,49 @@
+-if(isset($builder) && $current_user->has_access('superlist_developer'))
+  .panel
+    =button_to('Superlist Admin', manage_superlist_url($builder->key))
+-if($controls['add'])
+  .panel
+    =button_to("New $human_name", command_url('add', array('oid'=>null), $namespace))
+-$superlist_id = uniqid();
+-$table_id = 'superlist_'.$superlist_id;
+%table.superlist{:id=>$table_id}
+  %tr.head
+    -foreach($list as $field_name=>$field_info)
+      %th =se(humanize($field_name))
+    %th{:colspan=>999}
+  -foreach($objects as $o)
+    -$row_id = "{$table_id}_row_{$o->id}"
+    -$detail_row_id = $row_id .'_detail'
+    %tr{:id=>$row_id}
+      -foreach($list as $field_name=>$field_info)
+        %td
+          
+          -$prop = "{$field_name}_display";
+          -if($o->responds_to($prop))
+            =$o->$prop
+          -else
+            =superlist_format($o->$field_name, $field_info)
+      -$extra_column_params = array('table_id'=>$table_id, 'row_id'=>$row_id, 'detail_row_id'=>$detail_row_id, 'object'=>$o, 'objects'=>$objects)
+      -event("superlist_".$params_name."_columns", $extra_column_params)
+      %td.controls
+        -if($builder)
+          -foreach($builder->superlist_buttons as $b)
+            =button_to($b->name, $b->calced_url($extra_column_params));
+        -if($controls['edit'])
+          %a{:href=>command_url('edit', array('oid'=>$o->id), $namespace), :alt=>'Edit'}
+            %img{:src=>magick_img_url('icon', $this_module_vpath.'/assets/images/edit.png', array('rad'=>0, 'ds'=>false))}
+        -if($controls['delete'])
+          %a{:href=>command_url('edit', array('oid'=>$o->id), $namespace), :alt=>'Delete'}
+            %img{:id=>"delete_{$superlist_id}_".$o->id, :src=>magick_img_url('icon', $this_module_vpath.'/assets/images/delete.png', array('rad'=>0, 'ds'=>false))}
+          :js
+            $('#delete_<?=$superlist_id?>_<?=$o->id?>').click( function() {
+              $(this).html('<?=j(se('Confirm?'))?>');
+              if(!$(this).hasClass('confirm'))
+              {
+                $(this).addClass('confirm');
+              } else {
+                $.get('<?=j(command_url('delete', array('oid'=>$o->id, 'c'=>1), $namespace))?>');
+                $(this).closest('tr').fadeOut();
+              }
+            });
+-event('after_superlist', array('superlist_id'=>$superlist_id, 'table_id'=>$table_id, 'klass'=>$klass, 'namespace'=>$namespace))

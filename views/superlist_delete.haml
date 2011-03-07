@@ -1,0 +1,9 @@
+.panel
+  .title
+    =se("Really delete")
+    +$edit_object->name . "?"
+  .body
+    =se("This operation cannot be undone.")
+    %p
+      =button_to('delete', command_url('delete', array('c'=>1)))
+      =button_to('cancel', command_url('list'))
